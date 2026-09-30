@@ -3,6 +3,7 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-na
 import {
   countByStatus,
   filterCollabs,
+  isCollaboration,
   SAMPLE_COLLABS,
   STATUSES,
   transition,
@@ -11,6 +12,10 @@ import {
   type Collaboration,
   type Status,
 } from "../../lib/collabs";
+import { listCodec } from "../../lib/persist";
+import { usePersistentState } from "../../lib/usePersistentState";
+
+const collabsCodec = listCodec(isCollaboration);
 
 const COLOR: Record<Status, string> = {
   proposed: "#5F6B7A",
@@ -26,7 +31,7 @@ function today(): string {
 }
 
 export default function CollaborationsScreen() {
-  const [items, setItems] = useState<Collaboration[]>(SAMPLE_COLLABS);
+  const [items, setItems] = usePersistentState<Collaboration[]>("collabs.items.v1", SAMPLE_COLLABS, collabsCodec);
   const [status, setStatus] = useState<Status | null>(null);
   const [query, setQuery] = useState("");
   const [partner, setPartner] = useState("");
@@ -60,7 +65,7 @@ export default function CollaborationsScreen() {
             <TextInput style={styles.input} placeholder="Partner" value={partner} onChangeText={setPartner} accessibilityLabel="Partner" />
             <TextInput style={styles.input} placeholder="Project" value={project} onChangeText={setProject} accessibilityLabel="Project" />
             {error && <Text style={styles.error}>{error}</Text>}
-            <Pressable style={styles.button} onPress={add} accessibilityRole="button">
+            <Pressable style={styles.button} onPress={add} accessibilityRole="button" accessibilityLabel="Add collaboration">
               <Text style={styles.buttonText}>Add as proposed</Text>
             </Pressable>
           </View>
@@ -72,9 +77,16 @@ export default function CollaborationsScreen() {
             accessibilityLabel="Search collaborations"
           />
           <View style={styles.chips}>
-            <Chip label={`All (${items.length})`} active={status === null} onPress={() => setStatus(null)} />
+            <Chip label={`All (${items.length})`} a11yLabel={`All statuses, ${items.length}`} active={status === null} onPress={() => setStatus(null)} />
             {STATUSES.map((s) => (
-              <Chip key={s} label={`${s} (${counts[s]})`} active={status === s} onPress={() => setStatus(status === s ? null : s)} />
+              <Chip
+                key={s}
+                label={`${s} (${counts[s]})`}
+                a11yLabel={`Filter ${s}, ${counts[s]}`}
+                active={status === s}
+                onPress={() => setStatus(status === s ? null : s)}
+              />
+
             ))}
           </View>
         </View>
@@ -109,12 +121,23 @@ export default function CollaborationsScreen() {
   );
 }
 
-function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+function Chip({
+  label,
+  a11yLabel,
+  active,
+  onPress,
+}: {
+  label: string;
+  a11yLabel?: string;
+  active: boolean;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       onPress={onPress}
       style={[styles.chip, active && styles.chipActive]}
       accessibilityRole="button"
+      accessibilityLabel={a11yLabel ?? label}
       accessibilityState={{ selected: active }}
     >
       <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>

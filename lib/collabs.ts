@@ -68,3 +68,20 @@ export const SAMPLE_COLLABS: Collaboration[] = [
   { id: "k4", partner: "Beanbag Games", project: "Game jam soundtrack", status: "completed", updatedAt: "2025-04-30" },
   { id: "k5", partner: "Crypto Coin Co", project: "Token landing page", status: "declined", updatedAt: "2025-05-02", notes: "Out of scope" },
 ];
+
+/** Type guard used when loading the pipeline from local storage. */
+export function isCollaboration(value: unknown): value is Collaboration {
+  if (typeof value !== "object" || value === null) return false;
+  const c = value as Record<string, unknown>;
+  return (
+    typeof c.id === "string" &&
+    typeof c.partner === "string" &&
+    c.partner.trim().length > 0 &&
+    typeof c.project === "string" &&
+    c.project.trim().length > 0 &&
+    STATUSES.includes(c.status as Status) &&
+    typeof c.updatedAt === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(c.updatedAt) &&
+    (c.notes === undefined || typeof c.notes === "string")
+  );
+}
