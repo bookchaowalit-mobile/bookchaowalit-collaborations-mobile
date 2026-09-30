@@ -11,12 +11,35 @@ Part of [Chaowalit Greepoke](https://bookchaowalit.com)'s 101 Portfolio Projects
 - **Navigation:** Expo Router (file-based)
 - **UI:** React Native + Ionicons
 
+## Features
+
+- **Collaboration pipeline** (home tab): track partners and projects through
+  `proposed → negotiating → active → completed` (or `declined`, which can be
+  reopened). Only valid transitions are offered.
+- **Status filter** chips with counts and **search** across partner, project
+  and notes.
+- **Propose** new collaborations with validated input.
+- Starts with sample data held in memory (`lib/collabs.ts`); persistence and
+  sharing with collaborators are on the backlog.
+
 ## Getting Started
 
 ```bash
-npm install
+npm ci
 npx expo start
 ```
+
+## Validation
+
+```bash
+npm run validate   # expo lint + tsc --noEmit + vitest
+npx expo export --platform android --output-dir dist   # bundle smoke check
+```
+
+Pure logic lives in `lib/` and is unit-tested with Vitest (`lib/*.test.ts`).
+CI (`.github/workflows/build.yml`) runs all of the above and fails on errors;
+the EAS preview build is owner-triggered (`workflow_dispatch`) and needs the
+`EXPO_TOKEN` secret plus the committed `eas.json`.
 
 ## Build
 
