@@ -42,7 +42,7 @@ export default function CollaborationsScreen() {
   const visible = filterCollabs(items, { status, query });
 
   const add = () => {
-    const problem = validateNew(partner, project);
+    const problem = validateNew(partner, project, items);
     setError(problem);
     if (problem) return;
     setItems([...items, { id: `${Date.now()}`, partner: partner.trim(), project: project.trim(), status: "proposed", updatedAt: today() }]);

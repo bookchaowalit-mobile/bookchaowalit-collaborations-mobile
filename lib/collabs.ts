@@ -43,21 +43,43 @@ export function sortPipeline(items: Collaboration[]): Collaboration[] {
   );
 }
 
+/** Comparison/search key: NFKC, zero-width/BOM stripped, whitespace collapsed, lowercase. */
+export function textKey(text: string): string {
+  return text
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/** Length as people count it (an emoji is 1, not 2 UTF-16 units). */
+const charLength = (text: string) => Array.from(text.trim()).length;
+
 export function filterCollabs(items: Collaboration[], opts: { status?: Status | null; query?: string }): Collaboration[] {
-  const q = (opts.query ?? "").trim().toLowerCase();
+  const q = textKey(opts.query ?? "");
   return sortPipeline(
     items.filter(
       (c) =>
         (!opts.status || c.status === opts.status) &&
-        (!q || [c.partner, c.project, c.notes ?? ""].some((s) => s.toLowerCase().includes(q))),
+        (!q || [c.partner, c.project, c.notes ?? ""].some((s) => textKey(s).includes(q))),
     ),
   );
 }
 
-export function validateNew(partner: string, project: string): string | null {
-  if (!partner.trim()) return "Partner is required";
-  if (!project.trim()) return "Project is required";
-  if (partner.trim().length > 60 || project.trim().length > 80) return "Keep partner ≤ 60 and project ≤ 80 characters";
+/**
+ * Validate a new collaboration. Pass the existing `items` to also reject a
+ * duplicate partner + project (ignoring case, spacing, Unicode form and
+ * invisible characters), e.g. from a double tap.
+ */
+export function validateNew(partner: string, project: string, items: Collaboration[] = []): string | null {
+  if (!textKey(partner)) return "Partner is required";
+  if (!textKey(project)) return "Project is required";
+  if (charLength(partner) > 60 || charLength(project) > 80) return "Keep partner ≤ 60 and project ≤ 80 characters";
+  const key = `${textKey(partner)}\u0000${textKey(project)}`;
+  if (items.some((c) => `${textKey(c.partner)}\u0000${textKey(c.project)}` === key)) {
+    return "This partner and project are already in the pipeline";
+  }
   return null;
 }
 

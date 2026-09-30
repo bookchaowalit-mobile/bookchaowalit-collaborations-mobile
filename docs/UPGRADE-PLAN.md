@@ -48,3 +48,12 @@ Score: 7/10 (was 6/10) — the pipeline survives restarts; no backend sync or ic
 - Accessibility: status chips and the add button have descriptive labels; profile links get link roles.
 - Advisories: `overrides.postcss ^8.5.28` clears the high-severity PostCSS advisory in Expo metro-config (minor bump). Remaining `image-size` (metro, bundler-only), `uuid` (via `xcode`) and `decode-uri-component` (via `query-string@7`) need an Expo SDK major upgrade; deliberately not auto-fixed.
 - Verified: typecheck, lint, 14 vitest tests, Android `expo export` bundle.
+
+## Done in this pass (pass 3)
+
+Score: 7.5/10 (was 7/10) — edge-case hunt in `lib/collabs.ts`.
+
+- Bug: the same partner + project could be added twice (double tap, or differing only by case/spacing/zero-width space); `validateNew(partner, project, items)` now rejects duplicates via a normalised `textKey`.
+- Bug: length limits counted UTF-16 units, so 31 emoji already failed "≤ 60"; zero-width-only input passed as non-blank.
+- Search matches decomposed accents and full-width letters (NFKC).
+- Verified: typecheck, lint, 18 vitest tests, Android `expo export`.

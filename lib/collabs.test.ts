@@ -39,3 +39,22 @@ describe("validateNew", () => {
     expect(validateNew("A".repeat(61), "B")).toMatch(/≤/);
   });
 });
+
+describe("pass 3 edge cases", () => {
+  it("rejects a duplicate partner + project despite case, spacing and zero-width characters", () => {
+    expect(validateNew("studio  lumen", "Brand refresh video\u200B", SAMPLE_COLLABS)).toMatch(/already/);
+    expect(validateNew("Studio Lumen", "Another project", SAMPLE_COLLABS)).toBeNull();
+  });
+  it("counts emoji as one character in length limits", () => {
+    expect(validateNew("🎨".repeat(40), "Mural")).toBeNull();
+    expect(validateNew("🎨".repeat(61), "Mural")).toMatch(/≤ 60/);
+  });
+  it("treats invisible-only input as blank", () => {
+    expect(validateNew("\u200B", "x")).toBe("Partner is required");
+  });
+  it("search ignores Unicode form and full-width letters", () => {
+    const items = [{ ...SAMPLE_COLLABS[0], id: "z", partner: "Café Studio" }];
+    expect(filterCollabs(items, { query: "cafe\u0301" })).toHaveLength(1);
+    expect(filterCollabs(items, { query: "\uFF43\uFF41\uFF46\uFF45\u0301" })).toHaveLength(1);
+  });
+});
